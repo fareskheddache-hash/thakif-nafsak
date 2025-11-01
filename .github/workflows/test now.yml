@@ -1,0 +1,14 @@
+name: Test Immediate Run
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Test Step
+      run: |
+        echo "🎉 GitHub Actions is working!"
+        echo "Your ثقف نفسك automation is ready!"
+        echo "Next: Set up the real workflow"

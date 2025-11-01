@@ -1,0 +1,88 @@
+# ☁️ ثقف نفسك - GitHub Actions Version
+import google.generativeai as genai
+import gspread
+from datetime import datetime
+import os
+
+# Configuration - API key from environment
+GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', 'AIzaSyDf1H1PB5RWzQOFO_4n_O8qGfHFyYwBc50')
+SHEET_ID = "1e70e5BvNuQFQtipB-7hYY6U1eUn4_OkLCn0-PG3BHM8"
+
+def main():
+    """Main function for GitHub Actions"""
+    print("🚀 Starting ثقف نفسك on GitHub Actions...")
+    
+    try:
+        # Configure AI
+        genai.configure(api_key=GOOGLE_API_KEY)
+        model = genai.GenerativeModel('models/gemini-2.0-flash')
+        
+        # Our perfected prompt
+        prompt = """
+        You are "ثقف نفسك" (Educate Yourself), a multilingual AI news content generator.
+        ONLY select Artificial Intelligence (AI) news from the last 48 hours.
+
+        Output the email in THREE languages: Arabic, French, and English. Use this exact structure:
+
+        Subject: [English AI News Title]
+
+        🌍 MULTILINGUAL CONTENT PACKAGE
+
+        العربية (Arabic)
+        📷 إنستغرام: [Arabic Instagram script]
+        💼 لينكدإن: [Arabic LinkedIn post]  
+        🐦 𝕏 (تويتر): [Arabic X thread]
+        📘 فيسبوك: [Arabic Facebook post]
+
+        Français (French)
+        📷 Instagram: [French Instagram script]
+        💼 LinkedIn: [French LinkedIn post]
+        🐦 X: [French X thread]
+        📘 Facebook: [French Facebook post]
+
+        English  
+        📷 Instagram: [English Instagram script]
+        💼 LinkedIn: [English LinkedIn post]
+        🐦 X: [English X thread]
+        📘 Facebook: [English Facebook post]
+
+        🔗 المصدر/Source/Source: [URL] - النشر/Published/Publié: [Date]
+        🖼️ كلمة الصورة/Image Keyword/Mot-clé image: [Keyword]
+        """
+        
+        print("🤖 Generating AI news...")
+        response = model.generate_content(prompt)
+        
+        # Extract news title
+        news_title = "Unknown Title"
+        if "Subject:" in response.text:
+            news_title = response.text.split("Subject:")[1].split("\n")[0].strip()
+        
+        print(f"📰 News generated: {news_title}")
+        
+        # Log to Google Sheets
+        log_to_sheets(news_title, response.text[:100])
+        
+        print("✅ GitHub Actions automation completed!")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return False
+
+def log_to_sheets(news_title, content_preview):
+    """Log to Google Sheets"""
+    try:
+        # For GitHub Actions, we need service account auth
+        # For now, let's just print success
+        print(f"📊 Would log to Google Sheets: {news_title}")
+        print("💡 Enable service account auth for full automation")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Sheets logging error: {e}")
+        return False
+
+if __name__ == "__main__":
+    success = main()
+    exit(0 if success else 1)

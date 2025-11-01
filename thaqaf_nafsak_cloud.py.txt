@@ -1,0 +1,103 @@
+# ☁️ ثقف نفسك - Cloud Function Version
+import google.generativeai as genai
+import gspread
+from datetime import datetime
+import os
+from google.auth import default
+
+# Configuration
+GOOGLE_API_KEY = "AIzaSyDf1H1PB5RWzQOFO_4n_O8qGfHFyYwBc50"
+SHEET_ID = "1e70e5BvNuQFQtipB-7hYY6U1eUn4_OkLCn0-PG3BHM8"
+
+def generate_daily_news_cloud(event, context):
+    """Cloud Function to generate daily AI news"""
+    print("🚀 Starting ثقف نفسك Cloud Automation...")
+    
+    try:
+        # Configure AI
+        genai.configure(api_key=GOOGLE_API_KEY)
+        model = genai.GenerativeModel('models/gemini-2.0-flash')
+        
+        # Our perfected prompt
+        prompt = """
+        You are "ثقف نفسك" (Educate Yourself), a multilingual AI news content generator.
+        ONLY select Artificial Intelligence (AI) news from the last 48 hours.
+
+        Output the email in THREE languages: Arabic, French, and English. Use this exact structure:
+
+        Subject: [English AI News Title]
+
+        🌍 MULTILINGUAL CONTENT PACKAGE
+
+        العربية (Arabic)
+        📷 إنستغرام: [Arabic Instagram script]
+        💼 لينكدإن: [Arabic LinkedIn post]  
+        🐦 𝕏 (تويتر): [Arabic X thread]
+        📘 فيسبوك: [Arabic Facebook post]
+
+        Français (French)
+        📷 Instagram: [French Instagram script]
+        💼 LinkedIn: [French LinkedIn post]
+        🐦 X: [French X thread]
+        📘 Facebook: [French Facebook post]
+
+        English  
+        📷 Instagram: [English Instagram script]
+        💼 LinkedIn: [English LinkedIn post]
+        🐦 X: [English X thread]
+        📘 Facebook: [English Facebook post]
+
+        🔗 المصدر/Source/Source: [URL] - النشر/Published/Publié: [Date]
+        🖼️ كلمة الصورة/Image Keyword/Mot-clé image: [Keyword]
+        """
+        
+        # Generate content
+        response = model.generate_content(prompt)
+        
+        # Extract news title
+        news_title = "Unknown Title"
+        if "Subject:" in response.text:
+            news_title = response.text.split("Subject:")[1].split("\n")[0].strip()
+        
+        # Log to Google Sheets
+        log_to_sheets_cloud(news_title, response.text[:100])
+        
+        print(f"✅ Cloud automation completed: {news_title}")
+        return f"Success: {news_title}"
+        
+    except Exception as e:
+        print(f"❌ Cloud function error: {e}")
+        return f"Error: {str(e)}"
+
+def log_to_sheets_cloud(news_title, content_preview):
+    """Log to Google Sheets from cloud"""
+    try:
+        # Authenticate
+        creds, _ = default()
+        gc = gspread.authorize(creds)
+        
+        # Open sheet
+        sheet = gc.open_by_key(SHEET_ID)
+        worksheet = sheet.sheet1
+        
+        # Add row
+        new_row = [
+            datetime.now().strftime('%Y-%m-%d'),
+            datetime.now().strftime('%H:%M:%S'),
+            news_title[:50] + "..." if len(news_title) > 50 else news_title,
+            "Multilingual (AR/FR/EN)",
+            "Instagram, LinkedIn, X, Facebook", 
+            "✅ Cloud Generated",
+            content_preview[:100] + "..."
+        ]
+        
+        worksheet.append_row(new_row)
+        print("✅ Logged to Google Sheets from cloud")
+        
+    except Exception as e:
+        print(f"❌ Sheets logging error: {e}")
+
+# For testing
+if __name__ == "__main__":
+    result = generate_daily_news_cloud(None, None)
+    print(result)
